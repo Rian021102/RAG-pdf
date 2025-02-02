@@ -13,8 +13,7 @@ from langchain_core.documents import Document  # Import Document from langchain_
 
 st.title("Ask Anything About Your Documents!")
 st.header("Extract information directly from your reports or PDFs")
-
-@st.experimental_singleton
+# @st.experimental_singleton
 def get_embeddings():
     return OllamaEmbeddings(model="bge-m3")
 
@@ -42,21 +41,17 @@ def main():
             for page in reader.pages:
                 text += page.extract_text() if page.extract_text() else ""
             documents = [Document(page_content=text, metadata={"source": "local"})]
-        elif file_type == "text/csv":
-            df = pd.read_csv(uploaded_file)
-            df = df[['Wellbore', 'Remark']]
-            text = df.to_string(header=False, index=False)
-            documents = [Document(page_content=text, metadata={"source": "local"})]
-
+    
         embeddings = get_embeddings()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1024, chunk_overlap=20,length_function=len)
         split_documents = text_splitter.split_documents(documents)
         db = Chroma.from_documents(documents=split_documents, embedding=embeddings, persist_directory='./Chroma_DB')
-        retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 4})
+        retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
         # Set up the local model:
         local_model = "llama3.2"
         llm = ChatOllama(model=local_model, num_predict=400,
+                         temperature=0.7, top_p=0.8,
                         stop=["<|start_header_id|>", "<|end_header_id|>", "<|eot_id|>"])
         
         prompt_template = """
