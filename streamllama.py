@@ -13,7 +13,7 @@ from langchain_core.documents import Document  # Import Document from langchain_
 
 st.title("Ask Anything About Your Documents!")
 st.header("Extract information directly from your reports or PDFs")
-# @st.experimental_singleton
+
 def get_embeddings():
     return OllamaEmbeddings(model="bge-m3")
 
