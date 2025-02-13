@@ -13,7 +13,7 @@ st.write("This is a simple RAG app, using OPENAI. Please use your own OpenAI API
 
 api_key = os.environ.get("OPENAI_API_KEY")
 embeddings_model = OpenAIEmbeddings()
-llm = ChatOpenAI(model_name="gpt-4", max_tokens=2048)
+llm = ChatOpenAI(model_name="gpt-4o")
 
 # Initialize session state
 if 'reader_init' not in st.session_state:

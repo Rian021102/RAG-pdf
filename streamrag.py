@@ -1,15 +1,19 @@
 import streamlit as st
 import pandas as pd
+import ollama
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.chat_models import ChatOllama
+# from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from PyPDF2 import PdfReader  # Ensure you have this library installed
 from langchain_core.documents import Document  # Import Document from langchain_core
+from langchain_community.vectorstores import FAISS
 
 st.title("Ask Anything About Your Documents!")
 st.header("Extract information directly from your reports or PDFs")
@@ -45,6 +49,7 @@ def main():
         embeddings = get_embeddings()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1024, chunk_overlap=20,length_function=len)
         split_documents = text_splitter.split_documents(documents)
+        
         db = Chroma.from_documents(documents=split_documents, embedding=embeddings, persist_directory='./Chroma_DB')
         retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
@@ -77,14 +82,26 @@ def main():
         st.session_state['chain'] = chain
         st.session_state['reader_init'] = True
 
-    if st.session_state['reader_init']:
+    # if st.session_state['reader_init']:
+    #     user_question = st.text_input("Ask a question")
+    #     if st.button("Ask"):
+    #         if user_question:
+    #             answer = ask(user_question)
+    #             st.write("Answer:", answer)
+    #         else:
+    #             st.write("Please enter a question")
+
+    if st.session_state.get('reader_init', False):
         user_question = st.text_input("Ask a question")
-        if st.button("Ask"):
-            if user_question:
-                answer = ask(user_question)
-                st.write("Answer:", answer)
-            else:
-                st.write("Please enter a question")
+    if st.button("Ask"):
+        if user_question:
+            embeddings = get_embeddings(user_question)
+            # Suppose `generate_answer` is a function you define to handle embeddings
+            answer = ask(embeddings)
+            st.write("Answer:", answer)
+        else:
+            st.write("Please enter a question")
+
     
 if __name__ == "__main__":
     main()
